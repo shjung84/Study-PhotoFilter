@@ -17,34 +17,34 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                        <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="TZ2-A7-fMv">
-                            <size key="itemSize" width="192" height="307"/>
+                        <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="TZ2-A7-fMv">
+                            <size key="itemSize" width="181" height="245"/>
                             <size key="headerReferenceSize" width="0.0" height="0.0"/>
                             <size key="footerReferenceSize" width="0.0" height="0.0"/>
                             <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
                         </collectionViewFlowLayout>
                         <cells>
                             <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="albumCell" id="9Ts-Fh-PiJ" customClass="AlbumCollectionViewCell" customModule="Study_PhotoFilter" customModuleProvider="target">
-                                <rect key="frame" x="0.0" y="0.0" width="192" height="307"/>
+                                <rect key="frame" x="0.0" y="0.0" width="200" height="245"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="pgk-6e-4l8">
-                                    <rect key="frame" x="0.0" y="0.0" width="192" height="307"/>
+                                <collectionViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO" id="MhB-JZ-0eT">
+                                    <rect key="frame" x="0.0" y="0.0" width="200" height="245"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <subviews>
                                         <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="fyz-uP-mtb">
-                                            <rect key="frame" x="0.0" y="0.0" width="192" height="192"/>
+                                            <rect key="frame" x="0.0" y="0.0" width="200" height="200"/>
                                             <constraints>
                                                 <constraint firstAttribute="width" secondItem="fyz-uP-mtb" secondAttribute="height" multiplier="1:1" id="epH-aI-IdT"/>
                                             </constraints>
                                         </imageView>
                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="m97-Hq-VZ8">
-                                            <rect key="frame" x="0.0" y="215" width="192" height="13.5"/>
+                                            <rect key="frame" x="0.0" y="223" width="200" height="13.5"/>
                                             <fontDescription key="fontDescription" style="UICTFontTextStyleCaption1"/>
                                             <color key="textColor" white="0.33333333329999998" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                             <nil key="highlightedColor"/>
                                         </label>
                                         <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="hEF-Fz-uXB">
-                                            <rect key="frame" x="0.0" y="195" width="192" height="17"/>
+                                            <rect key="frame" x="0.0" y="203" width="200" height="17"/>
                                             <fontDescription key="fontDescription" style="UICTFontTextStyleBody"/>
                                             <color key="textColor" red="0.016804177310000001" green="0.19835099580000001" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                             <nil key="highlightedColor"/>
@@ -53,17 +53,17 @@
                                     <constraints>
                                         <constraint firstItem="hEF-Fz-uXB" firstAttribute="top" secondItem="fyz-uP-mtb" secondAttribute="bottom" constant="3" id="7bv-zr-Gil"/>
                                         <constraint firstItem="m97-Hq-VZ8" firstAttribute="top" secondItem="hEF-Fz-uXB" secondAttribute="bottom" constant="3" id="COp-PM-Jcr"/>
-                                        <constraint firstItem="fyz-uP-mtb" firstAttribute="top" secondItem="pgk-6e-4l8" secondAttribute="top" id="DQn-bq-3ZT"/>
+                                        <constraint firstItem="fyz-uP-mtb" firstAttribute="top" secondItem="MhB-JZ-0eT" secondAttribute="top" id="DQn-bq-3ZT"/>
                                         <constraint firstItem="hEF-Fz-uXB" firstAttribute="leading" secondItem="fyz-uP-mtb" secondAttribute="leading" id="Mzh-0E-KYW"/>
                                         <constraint firstItem="m97-Hq-VZ8" firstAttribute="leading" secondItem="hEF-Fz-uXB" secondAttribute="leading" id="PPa-G4-dqN"/>
                                         <constraint firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="m97-Hq-VZ8" secondAttribute="bottom" id="S1j-xv-QdC"/>
                                         <constraint firstItem="m97-Hq-VZ8" firstAttribute="trailing" secondItem="hEF-Fz-uXB" secondAttribute="trailing" id="Vqx-zZ-V0z"/>
-                                        <constraint firstItem="fyz-uP-mtb" firstAttribute="leading" secondItem="pgk-6e-4l8" secondAttribute="leading" id="aHR-2e-Gsd"/>
+                                        <constraint firstItem="fyz-uP-mtb" firstAttribute="leading" secondItem="MhB-JZ-0eT" secondAttribute="leading" id="aHR-2e-Gsd"/>
                                         <constraint firstAttribute="trailing" secondItem="fyz-uP-mtb" secondAttribute="trailing" id="qYG-PH-ZUZ"/>
                                         <constraint firstItem="hEF-Fz-uXB" firstAttribute="trailing" secondItem="fyz-uP-mtb" secondAttribute="trailing" id="wLX-Rg-saX"/>
                                     </constraints>
                                 </collectionViewCellContentView>
-                                <size key="customSize" width="192" height="307"/>
+                                <size key="customSize" width="200" height="245"/>
                                 <connections>
                                     <outlet property="countLabel" destination="m97-Hq-VZ8" id="AJb-gc-Rab"/>
                                     <outlet property="imageView" destination="fyz-uP-mtb" id="uQd-Yc-4dC"/>
@@ -91,8 +91,8 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
-                        <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="10" minimumInteritemSpacing="10" id="cez-fK-eeu">
-                            <size key="itemSize" width="200" height="285"/>
+                        <collectionViewFlowLayout key="collectionViewLayout" automaticEstimatedItemSize="YES" minimumLineSpacing="1" minimumInteritemSpacing="1" id="cez-fK-eeu">
+                            <size key="itemSize" width="250" height="250"/>
                             <size key="headerReferenceSize" width="0.0" height="0.0"/>
                             <size key="footerReferenceSize" width="0.0" height="0.0"/>
                             <inset key="sectionInset" minX="0.0" minY="0.0" maxX="0.0" maxY="0.0"/>
@@ -110,10 +110,10 @@
                                         </imageView>
                                     </subviews>
                                     <constraints>
-                                        <constraint firstAttribute="bottom" secondItem="j4U-Ee-G1c" secondAttribute="bottom" id="1kJ-bi-z9J"/>
-                                        <constraint firstAttribute="trailing" secondItem="j4U-Ee-G1c" secondAttribute="trailing" id="9se-rj-WMh"/>
-                                        <constraint firstItem="j4U-Ee-G1c" firstAttribute="top" secondItem="smk-t4-A99" secondAttribute="top" id="fbF-9r-xvp"/>
-                                        <constraint firstItem="j4U-Ee-G1c" firstAttribute="leading" secondItem="smk-t4-A99" secondAttribute="leading" id="wKp-6K-tSj"/>
+                                        <constraint firstItem="j4U-Ee-G1c" firstAttribute="top" secondItem="smk-t4-A99" secondAttribute="top" id="1rV-RU-TOf"/>
+                                        <constraint firstItem="j4U-Ee-G1c" firstAttribute="leading" secondItem="smk-t4-A99" secondAttribute="leading" id="7S8-00-4vL"/>
+                                        <constraint firstAttribute="trailing" secondItem="j4U-Ee-G1c" secondAttribute="trailing" id="XKb-xX-rjr"/>
+                                        <constraint firstAttribute="bottom" secondItem="j4U-Ee-G1c" secondAttribute="bottom" id="qOV-dY-gnD"/>
                                     </constraints>
                                 </collectionViewCellContentView>
                                 <size key="customSize" width="200" height="285"/>

@@ -6,83 +6,191 @@
 //
 
 import UIKit
-
-private let reuseIdentifier = "Cell"
+import Photos
 
 class PhotoCollectionViewController: UICollectionViewController {
+	
+	// MARK: - Properties
+	var fetchResult: PHFetchResult<PHAsset>? {
+		didSet {
+			OperationQueue.main.addOperation {
+				self.collectionView?.reloadSections(IndexSet(0...0))
+			}
+		}
+	}
+	var assetCollection: PHAssetCollection?
+	
+	// MARK: - Privates
+	private let cellResultIdentifier: String = "photoCell"
+	private lazy var cachingImageManager: PHCachingImageManager = {
+		return PHCachingImageManager()
+	}()
+	
+	// MARK: - Lifecycle
+	deinit {
+		PHPhotoLibrary.shared().unregisterChangeObserver(self )
+	}
+}
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
+extension PhotoCollectionViewController {
+	
+	private func configureCell(_ cell: PhotoCollectionViewCell,
+							   collectionView: UICollectionView,
+							   indexPath: IndexPath) {
+	
+	guard let asset: PHAsset = self.fetchResult?.object(at: indexPath.item) else { return }
+	
+	let manager: PHCachingImageManager = self.cachingImageManager
+	let handler: (UIImage?, [AnyHashable:Any]?) -> Void = { image, _ in
+		
+		let cellAtIndex: UICollectionViewCell? = collectionView.cellForItem(at: indexPath)
+		
+		guard let cell: PhotoCollectionViewCell = cellAtIndex as? PhotoCollectionViewCell
+			else { return }
+		
+		cell.imageView.image = image
+	}
+	
+	manager.requestImage(for: asset,
+						targetSize: CGSize(width: 100, height:100),
+						contentMode: PHImageContentMode.aspectFill,
+						options: nil,
+						resultHandler: handler)
+	}
+}
 
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
+// MARK: - UICollectionViewDataSource
+extension PhotoCollectionViewController {
+	
+	override func numberOfSections(in collectionView: UICollectionView) -> Int {
+		return 1
+	}
+	
+	override func collectionView(_ collectionView: UICollectionView,
+								 numberOfItemsInSection section: Int) -> Int {
+		return self.fetchResult?.count ?? 0
+	}
+}
 
-        // Register cell classes
-        self.collectionView!.register(UICollectionViewCell.self, forCellWithReuseIdentifier: reuseIdentifier)
+extension PhotoCollectionViewController {
+	
+	override func collectionView(_ collectionView: UICollectionView,
+								 cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+		let cell: PhotoCollectionViewCell
+		cell = collectionView.dequeueReusableCell(withReuseIdentifier: self.cellResultIdentifier,
+												  for: indexPath) as! PhotoCollectionViewCell
+	
+		return cell
+	}
+	
+	override func collectionView(_ collectionView: UICollectionView,
+								 willDisplay cell: UICollectionViewCell,
+								 forItemAt indexPath: IndexPath) {
+		guard let cell: PhotoCollectionViewCell = cell as? PhotoCollectionViewCell else {
+			return
+		}
+		
+		self.configureCell(cell, collectionView: collectionView, indexPath: indexPath)
+//		self.configureCell(cell, collectionView: collectionView, indexPath: indexPath)
+	}
+}
 
-        // Do any additional setup after loading the view.
-    }
+// MARK: - UICOllectionViewDelegateFlowLayout
+extension PhotoCollectionViewController {
+	
+	func collectionView(_ collectionView: UICollectionView,
+								 layout collectionViewLayout: UICollectionViewLayout,
+								 sizeForItemAt indexPath: IndexPath) -> CGSize {
+		guard let flowLayout: UICollectionViewFlowLayout = self.collectionViewLayout as? UICollectionViewFlowLayout else { return CGSize.zero }
+		
+		let numberOfCellsInRow: CGFloat = 4
+		let viewSize: CGSize = self.view.frame.size
+		let sectionInset: UIEdgeInsets = flowLayout.sectionInset
+		
+		let interitemSpace: CGFloat = flowLayout.minimumInteritemSpacing * ( numberOfCellsInRow - 1 )
+		
+		var itemWidth: CGFloat
+		itemWidth = viewSize.width - sectionInset.left - sectionInset.right - interitemSpace
+		itemWidth /= numberOfCellsInRow
+		
+		let itemSize = CGSize(width: itemWidth, height: itemWidth)
+		
+		return itemSize
+	}
+}
 
-    /*
-    // MARK: - Navigation
+extension PhotoCollectionViewController {
+	private func updateCollectionnView(with changes: PHFetchResultChangeDetails<PHAsset>) {
+		guard let collectionView = self.collectionView else { return }
+		
+		// 업데이트는 삭제, 삽입, 다시 불러오기, 이동 순으로 진행합니다.
+		if let removed: IndexSet = changes.removedIndexes, removed.count > 0 {
+			collectionView.deleteItems(at: removed.map({
+				IndexPath(item: $0, section: 0)
+			}))
+		}
+		
+		if let inserted: IndexSet = changes.insertedIndexes, inserted.count > 0 {
+			collectionView.insertItems(at: inserted.map({
+				IndexPath(item: $0, section: 0)
+			}))
+		}
+		
+		changes.enumerateMoves { fromIndex, toIndex in
+			collectionView.moveItem(at: IndexPath(item: fromIndex, section: 0),
+									to: IndexPath(item: toIndex, section: 0))
+		}
+	}
+}
 
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using [segue destinationViewController].
-        // Pass the selected object to the new view controller.
-    }
-    */
+// MARK: - PHPhotoLibraryChangeObserver
+extension PhotoCollectionViewController: PHPhotoLibraryChangeObserver {
+	
+	private func resetCachedAssets() {
+		self.cachingImageManager.stopCachingImagesForAllAssets()
+	}
+	
+	func photoLibraryDidChange(_ changeInstance: PHChange) {
+		guard let fetchResult: PHFetchResult<PHAsset> = self.fetchResult
+			else { return }
+		
+		guard let changes: PHFetchResultChangeDetails<PHAsset> = changeInstance.changeDetails(for: fetchResult)
+			else { return }
+		
+		DispatchQueue.main.async {
+			self.resetCachedAssets()
+			self.fetchResult = changes.fetchResultAfterChanges
+			
+			if changes.hasIncrementalChanges {
+				self.updateCollectionnView(with: changes)
+			} else {
+				self.collectionView?.reloadSections(IndexSet(0...0))
+			}
+		}
+	}
+}
 
-    // MARK: UICollectionViewDataSource
+extension PhotoCollectionViewController {
+	
+	// MARK: - Lifecycle
+	override func viewDidLoad() {
+		super.viewDidLoad()
+		
+		// 사진 라이브러리 변경을 감지할 수 있도록 등록
+		PHPhotoLibrary.shared().register(self)
+	}
+}
 
-    override func numberOfSections(in collectionView: UICollectionView) -> Int {
-        // #warning Incomplete implementation, return the number of sections
-        return 0
-    }
-
-
-    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of items
-        return 0
-    }
-
-    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath)
-    
-        // Configure the cell
-    
-        return cell
-    }
-
-    // MARK: UICollectionViewDelegate
-
-    /*
-    // Uncomment this method to specify if the specified item should be highlighted during tracking
-    override func collectionView(_ collectionView: UICollectionView, shouldHighlightItemAt indexPath: IndexPath) -> Bool {
-        return true
-    }
-    */
-
-    /*
-    // Uncomment this method to specify if the specified item should be selected
-    override func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
-        return true
-    }
-    */
-
-    /*
-    // Uncomment these methods to specify if an action menu should be displayed for the specified item, and react to actions performed on the item
-    override func collectionView(_ collectionView: UICollectionView, shouldShowMenuForItemAt indexPath: IndexPath) -> Bool {
-        return false
-    }
-
-    override func collectionView(_ collectionView: UICollectionView, canPerformAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) -> Bool {
-        return false
-    }
-
-    override func collectionView(_ collectionView: UICollectionView, performAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) {
-    
-    }
-    */
-
+extension PhotoCollectionViewController {
+	
+	// MARK: - Navigation
+	override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+		
+		guard let destination = segue.destination as? PhotoViewController,
+			  let cell: PhotoCollectionViewCell = sender as? PhotoCollectionViewCell,
+			  let indexPath: IndexPath = collectionView?.indexPath(for: cell) else { return }
+		
+		destination.asset = fetchResult?.object(at: indexPath.item)
+		destination.assetCollection = self.assetCollection
+	}
 }
