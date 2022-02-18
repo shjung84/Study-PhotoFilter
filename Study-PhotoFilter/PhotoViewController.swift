@@ -27,6 +27,12 @@ class PhotoViewController: UIViewController {
 	private lazy var filterCollectionViewController: FilterCollectionViewController? = {
 		return self.children.first as? FilterCollectionViewController
 	}()
+	
+	// MARK: - Life Cycle
+	deinit {
+		PHPhotoLibrary.shared().unregisterChangeObserver(self)
+		NotificationCenter.default.removeObserver(self)
+	}
 }
 
 extension PhotoViewController {
@@ -146,5 +152,100 @@ extension PhotoViewController {
 		guard let userInfo = noti.userInfo else { return }
 		guard let filterName: String = userInfo[userInfoKeyFilterName] as? String else { return }
 		self.adjustFilter(name: filterName)
+	}
+}
+
+extension PhotoViewController {
+	
+	// MARK: - Methods
+	private func setUpImageView() {
+		
+		guard let asset: PHAsset = self.asset else {
+			return
+		}
+		
+		let originalAssetImageSize = CGSize(width: asset.pixelWidth,
+											height: asset.pixelHeight)
+		
+		let manager: PHCachingImageManager = self.cachingImageManager
+		manager.requestImage(for: asset,
+							targetSize: originalAssetImageSize,
+							contentMode: PHImageContentMode.aspectFill,
+							options: nil,
+							resultHandler: { image, _ in
+								self.assetImageView.image = image
+								self.originalImage = image
+		})
+	}
+}
+
+extension PhotoViewController {
+	
+	private func setUpNavigationTitle() {
+		
+		guard let asset: PHAsset = self.asset else {
+			return
+		}
+		
+		let dateFormatter: DateFormatter = DateFormatter()
+		guard let createdDate: Date = asset.creationDate else { return }
+		
+		let titleView = UIView()
+		titleView.translatesAutoresizingMaskIntoConstraints = false
+		titleView.backgroundColor = UIColor.clear
+		
+		dateFormatter.dateFormat = "yyyy-MM-dd"
+		
+		let dateLabel = UILabel()
+		dateLabel.translatesAutoresizingMaskIntoConstraints = false
+		dateLabel.textAlignment = NSTextAlignment.center
+		dateLabel.numberOfLines = 1
+		dateLabel.backgroundColor = UIColor.clear
+		dateLabel.font = UIFont.preferredFont(forTextStyle: UIFont.TextStyle.headline)
+		dateLabel.textColor = UIColor.black
+		dateLabel.text = dateFormatter.string(from: createdDate)
+		
+		dateFormatter.dateFormat = "a hh:mm:ss"
+		
+		let timeLabel = UILabel()
+		timeLabel.translatesAutoresizingMaskIntoConstraints = false
+		timeLabel.textAlignment = NSTextAlignment.center
+		timeLabel.numberOfLines = 1
+		timeLabel.backgroundColor = UIColor.clear
+		timeLabel.font = UIFont.preferredFont(forTextStyle: UIFont.TextStyle.caption1)
+		timeLabel.textColor = UIColor.black
+		timeLabel.text = dateFormatter.string(from: createdDate)
+		
+		titleView.addSubview(dateLabel)
+		titleView.addSubview(timeLabel)
+		
+		dateLabel.topAnchor.constraint(equalTo: titleView.topAnchor).isActive = true
+		dateLabel.leadingAnchor.constraint(equalTo: titleView.leadingAnchor).isActive = true
+		dateLabel.trailingAnchor.constraint(equalTo: titleView.trailingAnchor).isActive = true
+		dateLabel.bottomAnchor.constraint(equalTo: timeLabel.topAnchor).isActive = true
+		timeLabel.bottomAnchor.constraint(equalTo: titleView.bottomAnchor).isActive = true
+		timeLabel.leadingAnchor.constraint(equalTo: dateLabel.leadingAnchor).isActive = true
+		timeLabel.trailingAnchor.constraint(equalTo: dateLabel.trailingAnchor).isActive = true
+		
+		self.navigationItem.titleView = titleView
+	}
+}
+
+extension PhotoViewController {
+	
+	// MARK: - Lifecycle
+	override func viewDidLoad() {
+		super.viewDidLoad()
+		
+		self.setUpImageView()
+		self.setUpNavigationTitle()
+		
+		PHPhotoLibrary.shared().register(self)
+		
+		self.filterCollectionViewController?.photoAsset = asset
+		NotificationCenter.default.addObserver(self,
+											   selector: #selector(didRecieveUserDidSelectFilterNotification(_:)),
+											   name: userDidSelectFilterNotificationName,
+											   object: nil)
 	}
 }

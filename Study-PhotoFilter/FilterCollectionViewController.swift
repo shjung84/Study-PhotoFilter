@@ -6,83 +6,145 @@
 //
 
 import UIKit
+import Photos
 
 private let reuseIdentifier = "Cell"
 
 class FilterCollectionViewController: UICollectionViewController {
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        // Uncomment the following line to preserve selection between presentations
-        // self.clearsSelectionOnViewWillAppear = false
-
-        // Register cell classes
-        self.collectionView!.register(UICollectionViewCell.self, forCellWithReuseIdentifier: reuseIdentifier)
-
-        // Do any additional setup after loading the view.
-    }
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using [segue destinationViewController].
-        // Pass the selected object to the new view controller.
-    }
-    */
-
-    // MARK: UICollectionViewDataSource
-
-    override func numberOfSections(in collectionView: UICollectionView) -> Int {
-        // #warning Incomplete implementation, return the number of sections
-        return 0
-    }
-
-
-    override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        // #warning Incomplete implementation, return the number of items
-        return 0
-    }
-
-    override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath)
-    
-        // Configure the cell
-    
-        return cell
-    }
-
-    // MARK: UICollectionViewDelegate
-
-    /*
-    // Uncomment this method to specify if the specified item should be highlighted during tracking
-    override func collectionView(_ collectionView: UICollectionView, shouldHighlightItemAt indexPath: IndexPath) -> Bool {
-        return true
-    }
-    */
-
-    /*
-    // Uncomment this method to specify if the specified item should be selected
-    override func collectionView(_ collectionView: UICollectionView, shouldSelectItemAt indexPath: IndexPath) -> Bool {
-        return true
-    }
-    */
-
-    /*
-    // Uncomment these methods to specify if an action menu should be displayed for the specified item, and react to actions performed on the item
-    override func collectionView(_ collectionView: UICollectionView, shouldShowMenuForItemAt indexPath: IndexPath) -> Bool {
-        return false
-    }
-
-    override func collectionView(_ collectionView: UICollectionView, canPerformAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) -> Bool {
-        return false
-    }
-
-    override func collectionView(_ collectionView: UICollectionView, performAction action: Selector, forItemAt indexPath: IndexPath, withSender sender: Any?) {
-    
-    }
-    */
-
+	// MARK: - Properties
+	var photoAsset: PHAsset? {
+		didSet {
+			guard let asset = photoAsset else { return }
+			
+			let manager: PHCachingImageManager = self.cachingImageManager
+			manager.requestImage(for: asset,
+									targetSize: CGSize(width:200, height:200),
+									contentMode: PHImageContentMode.aspectFill,
+									options: nil,
+									resultHandler: {image, _ in
+									self.thumbnailImage = image})
+		}
+	}
+	
+	// MARK: - Privates
+	private var thumbnailImage: UIImage? {
+		didSet {
+			self.collectionView?.reloadSections(IndexSet(0...0))
+		}
+	}
+	private let cellResultIdentifier: String = "filterCell"
+	private let cachingImageManager: PHCachingImageManager = PHCachingImageManager()
+	private let imageOperationQueue: OperationQueue = OperationQueue()
+	private var filteredImageChache: [String:UIImage] = [:]
 }
+
+extension FilterCollectionViewController {
+	private var imageFilterNames: [String] {
+		return ["CIPhotoEffectChrome",
+				"CIPhotoEffectFade",
+				"CIPhotoEffectInstant",
+				"CIPhotoEffectMono",
+				"CIPhotoEffectNoir",
+				"CIPhotoEffectProcess",
+				"CIPhotoEffectTonal",
+				"CIPhotoEffectTransfer",
+				"CISepiaTone",
+				"CIVignette"]
+	}
+}
+
+extension FilterCollectionViewController {
+	private func adjustFilter(name filterName: String,
+							  for indexPath: IndexPath,
+							  cell: FilterCollectionViewCell) {
+		if let filteredImage: UIImage = self.filteredImageChache[filterName] {
+			cell.imageView.image = filteredImage; return;
+		}
+		
+		self.imageOperationQueue.addOperation {
+			guard let inputImage: UIImage = self.thumbnailImage else { return }
+			guard let filter: CIFilter = CIFilter(name: filterName) else { return }
+			guard let ciImage: CIImage = CIImage(image: inputImage) else { return }
+			filter.setValue(ciImage, forKey: kCIInputImageKey)
+			guard let outputImage: CIImage = filter.outputImage else { return }
+			let context: CIContext = CIContext(options: nil)
+			guard let cgImage: CGImage = context.createCGImage(outputImage, from: outputImage.extent) else { return }
+			let filteredImage: UIImage = UIImage(cgImage: cgImage)
+			self.filteredImageChache[filterName] = filteredImage
+			
+			OperationQueue.main.addOperation {
+				let cellAtIndex: UICollectionViewCell? = self.collectionView?.cellForItem(at: indexPath)
+				
+				guard let cell: FilterCollectionViewCell = cellAtIndex as? FilterCollectionViewCell else { return }
+				
+				cell.imageView.image = filteredImage
+			}
+		}
+	}
+}
+
+// MARK: - UICollectionViewDataSource
+extension FilterCollectionViewController {
+	override func numberOfSections(in collectionView: UICollectionView) -> Int {
+		return 1
+	}
+	
+	override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+		return self.imageFilterNames.count
+	}
+}
+
+extension FilterCollectionViewController {
+	override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+		let cell: FilterCollectionViewCell
+		cell = collectionView.dequeueReusableCell(withReuseIdentifier: self.cellResultIdentifier,
+												  for: indexPath) as! FilterCollectionViewCell
+		return cell
+	}
+	
+	override func collectionView(_ collectionView: UICollectionView,
+								 willDisplay cell: UICollectionViewCell,
+								 forItemAt indexPath: IndexPath) {
+		
+		guard let cell: FilterCollectionViewCell = cell as? FilterCollectionViewCell else { return }
+		
+		let filterName: String = self.imageFilterNames[indexPath.item]
+		
+		cell.filterNameLabel.text = filterName
+		
+		self.adjustFilter(name: filterName, for: indexPath, cell: cell)
+	}
+}
+
+// MARK: - UICollectionViewDelegateFlowLayout
+extension FilterCollectionViewController: UICollectionViewDelegateFlowLayout {
+	func collectionView(_ collectionView: UICollectionView,
+								 layout collectionViewLayout: UICollectionViewLayout,
+								 sizeForItemAt indexPath: IndexPath) -> CGSize {
+		
+		guard let flowLayout: UICollectionViewFlowLayout =
+				self.collectionViewLayout as? UICollectionViewFlowLayout else { return CGSize.zero }
+		
+		let viewSize: CGSize = self.view.frame.size
+		let sectionInset: UIEdgeInsets = flowLayout.sectionInset
+		let itemHeight: CGFloat = viewSize.height - sectionInset.top - sectionInset.bottom
+		let itemSize = CGSize(width: itemHeight, height: itemHeight)
+		
+		return itemSize
+	}
+}
+
+// MARK: - UICollectionViewDelegate
+extension FilterCollectionViewController {
+	
+	override func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+		let userInfo: [String: Any]
+		userInfo = [userInfoKeyFilterName:self.imageFilterNames[indexPath.item]]
+		
+		NotificationCenter.default.post(name: userDidSelectFilterNotificationName,
+										object: nil,
+										userInfo: userInfo)
+	}
+}
+
